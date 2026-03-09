@@ -28,7 +28,7 @@ Swiggy's Instamart MCP endpoint does not expose checkout — the agent physicall
 ## Quick Start
 
 ```bash
-git clone https://github.com/AFreckle/sneak-treat.git
+git clone https://github.com/Ankitmandal/sneak-treat.git
 cd sneak-treat
 chmod +x scripts/*.sh config/*.sh
 ./scripts/install.sh
