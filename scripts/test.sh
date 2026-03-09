@@ -22,11 +22,22 @@ if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
 fi
 echo "[OK] Skill is installed"
 
+# Check mcporter and Swiggy MCP
+if ! command -v mcporter &>/dev/null; then
+  echo "FAIL: mcporter not installed. Run: npm install -g mcporter"
+  exit 1
+fi
+if ! mcporter list 2>/dev/null | grep -q "swiggy-instamart"; then
+  echo "FAIL: Swiggy MCP server not configured. Run: mcporter config add swiggy-instamart --url https://mcp.swiggy.com/im --scope home"
+  exit 1
+fi
+echo "[OK] Swiggy MCP server configured"
+
 # Run the skill
 echo ""
 echo "Running sneak-treat skill..."
 echo "---"
-RESULT=$(openclaw chat --prompt "Run the sneak-treat skill. Report what happened." 2>&1)
+RESULT=$(openclaw agent --agent main -m "Run the sneak-treat skill. Report what happened." 2>&1)
 echo "$RESULT"
 echo "---"
 

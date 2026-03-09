@@ -29,21 +29,27 @@ Use Swiggy's official Model Context Protocol server.
 
 **Why this wins:**
 - **No browser at all** — structured API calls, not page interactions
-- **Checkout not exposed** — Instamart MCP doesn't support placing orders
+- **Checkout restricted** — Instamart MCP checkout is capped at ₹1000 (beta) and the skill explicitly forbids calling it
 - **Structured data** — no HTML parsing, minimal prompt injection surface (see [SECURITY.md](SECURITY.md) for nuance)
 - **Official API** — maintained by Swiggy, follows MCP standard
 - **Semantic resilience** — API tools don't break when UI changes
 
 ## MCP (Model Context Protocol)
 
-MCP is a standard protocol that lets AI agents call specific tools exposed by a server. Swiggy's MCP server at `https://mcp.swiggy.com/im` exposes tools like:
+MCP is a standard protocol that lets AI agents call specific tools exposed by a server. Swiggy's MCP server at `https://mcp.swiggy.com/im` exposes 13 tools via [mcporter](https://mcporter.dev):
 
-- Product search
-- Add to cart
-- View cart contents
-- Pricing information
+- `get_addresses` — list saved delivery addresses
+- `search_products` — search Instamart catalog by query
+- `get_cart` / `update_cart` / `clear_cart` — cart management
+- `checkout` — place order (capped at ₹1000 during MCP beta)
+- `get_orders` / `get_order_details` / `track_order` — order history and tracking
+- `your_go_to_items` — frequently ordered items
+- `create_address` / `delete_address` — address management
+- `report_error` — report MCP issues to Swiggy
 
-The agent calls these tools with typed parameters and gets structured JSON responses. There's no open-ended browsing.
+**Important**: `update_cart` replaces the entire cart contents. To add an item without removing existing ones, you must include all current items plus the new one.
+
+The agent calls these tools via `mcporter call` with typed parameters and gets structured JSON responses. There's no open-ended browsing.
 
 ## Skill Design
 

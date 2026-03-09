@@ -4,7 +4,6 @@ set -euo pipefail
 
 SKILL_DIR="$HOME/.openclaw/skills/sneak-treat"
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-OPENCLAW_CONFIG="$HOME/.openclaw/openclaw.json"
 
 echo "=== Sneak Treat Installer ==="
 echo ""
@@ -52,45 +51,38 @@ cp "$SCRIPT_DIR/skill/SKILL.md" "$SKILL_DIR/SKILL.md"
 cp "$SCRIPT_DIR/skill/config.json" "$SKILL_DIR/config.json"
 echo "  Skill files copied."
 
-# 4. MCP server config
+# 4. MCP server config (via mcporter)
 echo ""
 echo "[4/6] Swiggy MCP server configuration"
 
-if grep -q "swiggy-instamart" "$OPENCLAW_CONFIG" 2>/dev/null; then
+if ! command -v mcporter &>/dev/null; then
+  echo "  mcporter not found. Installing..."
+  npm install -g mcporter
+fi
+
+if mcporter list 2>/dev/null | grep -q "swiggy-instamart"; then
   echo "  Swiggy Instamart MCP server already configured. Skipping."
-elif command -v jq &>/dev/null; then
-  echo "  Adding Swiggy MCP server to $OPENCLAW_CONFIG..."
-  TMPFILE=$(mktemp)
-  ORIGINAL_PERMS=$(stat -f "%OLp" "$OPENCLAW_CONFIG" 2>/dev/null || stat -c "%a" "$OPENCLAW_CONFIG" 2>/dev/null || echo "600")
-  jq '.mcpServers["swiggy-instamart"] = {"url": "https://mcp.swiggy.com/im", "transport": "streamable-http"}' "$OPENCLAW_CONFIG" > "$TMPFILE" && mv "$TMPFILE" "$OPENCLAW_CONFIG"
-  chmod "$ORIGINAL_PERMS" "$OPENCLAW_CONFIG"
-  echo "  Done."
 else
-  echo ""
-  echo "  jq is not installed — cannot auto-merge config."
-  echo "  Add this to your ~/.openclaw/openclaw.json (merge into existing config):"
-  echo ""
-  echo '  "mcpServers": {'
-  echo '    "swiggy-instamart": {'
-  echo '      "url": "https://mcp.swiggy.com/im",'
-  echo '      "transport": "streamable-http"'
-  echo '    }'
-  echo '  }'
-  echo ""
-  read -p "  Press Enter when done (or Ctrl-C to abort)..."
+  echo "  Adding Swiggy MCP server via mcporter..."
+  mcporter config add swiggy-instamart --url https://mcp.swiggy.com/im --scope home
+  echo "  Done."
 fi
 
 # 5. Authenticate with Swiggy
 echo ""
 echo "[5/6] Swiggy authentication"
 echo ""
-echo "  You need to authenticate with Swiggy's MCP server."
-echo "  This will send an OTP to your registered Swiggy phone number."
+echo "  Authenticating with Swiggy MCP server..."
+echo "  A browser window will open for Swiggy OAuth login."
 echo ""
-echo "  Run this in a separate terminal:"
-echo '  openclaw chat --prompt "Connect to the Swiggy Instamart MCP server and authenticate."'
+mcporter auth swiggy-instamart --oauth-timeout 120000
 echo ""
-read -p "  Press Enter after you've authenticated..."
+echo "  Verifying..."
+if mcporter list 2>/dev/null | grep -q "tools"; then
+  echo "  Authentication successful."
+else
+  echo "  WARNING: Authentication may have failed. Run: mcporter auth swiggy-instamart"
+fi
 
 # 6. Register cron job
 echo ""
@@ -106,5 +98,5 @@ fi
 echo ""
 echo "=== Setup complete! ==="
 echo ""
-echo "Test it: openclaw chat --prompt 'Run the sneak-treat skill.'"
+echo "Test it: openclaw agent --agent main -m 'Run the sneak-treat skill. Report what happened.'"
 echo "Or run:  ./scripts/test.sh"

@@ -10,9 +10,9 @@ This project uses an AI agent (via OpenClaw) to modify a Swiggy Instamart cart. 
 |----------|-----------|-----|
 | Browser automation (Playwright/Puppeteer) | High | Agent can click any button, including "Place Order" |
 | Browser automation with LLM (OpenClaw + browser tool) | High | LLM could misinterpret page and click checkout |
-| **MCP server (this project)** | **None** | Swiggy's Instamart MCP does not expose checkout |
+| **MCP server (this project)** | **Low** | Checkout exists but capped at ₹1000; skill explicitly forbidden from calling it |
 
-Swiggy's Instamart MCP endpoint (`https://mcp.swiggy.com/im`) exposes structured API tools for search, add-to-cart, and view-cart. **Checkout is not available** through the Instamart MCP interface. The agent physically cannot place an order.
+Swiggy's Instamart MCP endpoint (`https://mcp.swiggy.com/im`) exposes structured API tools including search, update-cart, view-cart, and checkout. **Checkout is available** but restricted to orders under ₹1000 (Swiggy's MCP beta limitation). Our defense: the skill instructions (`SKILL.md`) explicitly forbid calling `checkout`, `clear_cart`, or any payment/order tools.
 
 ### Risk: Prompt Injection
 
@@ -30,7 +30,8 @@ The agent could theoretically remove items or change quantities.
 **Our mitigation**:
 - The skill instructions (`SKILL.md`) explicitly forbid removing items or changing quantities
 - The skill config (`config.json`) restricts tool access to `mcp:swiggy-instamart` only — no browser, filesystem, or exec tools
-- The skill checks if the item is already in cart before adding (idempotent)
+- The skill checks if the item is already in cart before adding (best-effort idempotent)
+- **Note**: `update_cart` replaces the entire cart, so the skill must preserve existing items. A bug here could clear your cart — this is an LLM instruction risk, not a safety guarantee.
 
 ### Risk: Secret Leakage
 
@@ -45,7 +46,7 @@ All secrets are stored in environment variables or OpenClaw's `.env` file. The `
 
 ### Risk: Session Hijacking
 
-Swiggy MCP authentication uses OTP-based login. Session tokens are stored by OpenClaw internally. If the machine is compromised, the attacker could access:
+Swiggy MCP authentication uses OAuth (browser-based login). Session tokens are stored by mcporter locally (`~/.mcporter/`). If the machine is compromised, the attacker could access:
 - Your Swiggy cart (add/view items)
 - Your Swiggy account info accessible through MCP
 
@@ -56,7 +57,7 @@ Swiggy MCP authentication uses OTP-based login. Session tokens are stored by Ope
 ```
 Layer 1: MCP-only (no browser)        → No page interaction, no accidental clicks
 Layer 2: Tool restriction              → Skill only has access to mcp:swiggy-instamart
-Layer 3: No checkout exposed           → Swiggy Instamart MCP doesn't support it
+Layer 3: Checkout forbidden in skill   → SKILL.md explicitly bans checkout/clear_cart/payment tools
 Layer 4: Idempotency (best-effort)     → LLM instructed to check cart before adding*
 Layer 5: Isolated cron sessions        → No context leakage between runs
 Layer 6: Session expiry notification   → Alerts when re-auth is needed

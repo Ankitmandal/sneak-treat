@@ -6,9 +6,9 @@
 
 **Fix**: Re-authenticate with Swiggy MCP:
 ```bash
-openclaw chat --prompt "Connect to the Swiggy Instamart MCP server and authenticate."
+mcporter auth swiggy-instamart
 ```
-This triggers an OTP to your registered Swiggy phone number. Sessions expire periodically — this is expected.
+This opens a browser window for Swiggy OAuth login. Sessions expire periodically — this is expected.
 
 ## Product Not Found
 
@@ -56,9 +56,11 @@ Common causes:
 
 **Symptom**: Multiple units of the treat appear in cart.
 
-**Possible cause**: The idempotency check in SKILL.md failed (MCP tool behavior changed).
+**Possible causes**:
+- The idempotency check in SKILL.md failed (LLM skipped cart check)
+- The `update_cart` call didn't properly preserve existing items (it replaces the entire cart)
 
-**Fix**: Manually remove extra items from your Swiggy cart. If this keeps happening, check if Swiggy's MCP "view cart" tool is returning correct data.
+**Fix**: Manually remove extra items from your Swiggy cart. If this keeps happening, check if Swiggy's MCP `get_cart` tool is returning correct data: `mcporter call swiggy-instamart.get_cart`
 
 ## Cron Job Not Running
 

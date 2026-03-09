@@ -1,6 +1,6 @@
 # Sneak Treat
 
-Automatically add a dog treat to your Swiggy Instamart cart every day at 3 AM — using an AI agent that **cannot** accidentally checkout.
+Automatically add a dog treat to your Swiggy Instamart cart every day at 3 AM — using an AI agent that is **explicitly forbidden** from checking out.
 
 ## How It Works
 
@@ -10,18 +10,19 @@ An [OpenClaw](https://github.com/openclaw/openclaw) skill uses Swiggy's official
 
 | | Browser Agent | MCP Agent (this project) |
 |-|--------------|--------------------------|
-| Can accidentally checkout | Yes | **No** (not exposed) |
+| Can accidentally checkout | Yes | **Low** (skill forbidden from calling checkout) |
 | Prompt injection risk | High (reads page HTML) | **Low** (structured API, no HTML) |
 | Clicks wrong button | Possible | **N/A** (no buttons) |
 | Cost per run | $0.10–0.50 | **< $0.01** |
 | Breaks when UI changes | Yes | **No** (API is stable) |
 
-Swiggy's Instamart MCP endpoint does not expose checkout — the agent physically cannot place an order. See [docs/SECURITY.md](docs/SECURITY.md) for the full threat model.
+Swiggy's Instamart MCP endpoint does expose checkout (capped at ₹1000 during beta), but the skill is explicitly forbidden from calling it. See [docs/SECURITY.md](docs/SECURITY.md) for the full threat model.
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) >= 22
 - [OpenClaw](https://github.com/openclaw/openclaw) installed and gateway running
+- [mcporter](https://mcporter.dev) installed (`npm install -g mcporter`)
 - A Swiggy account
 - A Groq API key (free tier available at [console.groq.com](https://console.groq.com))
 
@@ -53,31 +54,27 @@ cp skill/config.json ~/.openclaw/skills/sneak-treat/
 
 ### 2. Add Swiggy MCP server
 
-Merge this into your `~/.openclaw/openclaw.json`:
-
-```json
-{
-  "mcpServers": {
-    "swiggy-instamart": {
-      "url": "https://mcp.swiggy.com/im",
-      "transport": "streamable-http"
-    }
-  }
-}
+```bash
+mcporter config add swiggy-instamart --url https://mcp.swiggy.com/im --scope home
 ```
 
 ### 3. Authenticate with Swiggy
 
 ```bash
-openclaw chat --prompt "Connect to the Swiggy Instamart MCP server and authenticate."
+mcporter auth swiggy-instamart
 ```
 
-This sends an OTP to your registered Swiggy phone number.
+This opens a browser window for Swiggy OAuth login. Complete the login flow.
+
+Verify it worked:
+```bash
+mcporter list  # Should show "swiggy-instamart (13 tools)"
+```
 
 ### 4. Test
 
 ```bash
-openclaw chat --prompt "Run the sneak-treat skill."
+openclaw agent --agent main -m "Run the sneak-treat skill. Report what happened."
 ```
 
 Then check your Swiggy Instamart cart.
@@ -125,7 +122,7 @@ Any model supported by OpenClaw works. We use Groq for speed and low cost.
 Swiggy MCP sessions expire periodically. When this happens:
 1. The skill reports "Swiggy session expired"
 2. The `session-notify.sh` script sends a macOS notification (if configured)
-3. Re-authenticate: `openclaw chat --prompt "Connect to the Swiggy Instamart MCP server and authenticate."`
+3. Re-authenticate: `mcporter auth swiggy-instamart`
 
 To set up notifications (macOS and Linux):
 ```bash
