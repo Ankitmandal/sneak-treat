@@ -7,6 +7,7 @@
 # OpenClaw state (real config has secrets)
 openclaw.json
 !config/openclaw.example.json
+!config/.env.example
 
 # Logs & screenshots
 logs/

@@ -6,6 +6,13 @@ set -euo pipefail
 
 echo "Registering sneak-treat cron job..."
 
+# Check if the cron job already exists
+if openclaw cron list 2>/dev/null | grep -q "sneak-treat-run"; then
+  echo "Cron job 'sneak-treat-run' already exists. Skipping."
+  echo "To recreate, first delete it: openclaw cron delete sneak-treat-run"
+  exit 0
+fi
+
 openclaw cron create \
   --name "sneak-treat-run" \
   --schedule "0 3 * * *" \

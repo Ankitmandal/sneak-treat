@@ -18,7 +18,10 @@ Swiggy's Instamart MCP endpoint (`https://mcp.swiggy.com/im`) exposes structured
 
 Browser-based agents read web page content (DOM, text, ads) and pass it to the LLM. Malicious content on the page could manipulate the agent.
 
-**Our mitigation**: No browser. The MCP server returns structured JSON data, not HTML. There is no webpage content for an attacker to inject into.
+**Our mitigation**: No browser — significantly reduced attack surface. However, MCP tool responses still contain text data (product names, descriptions) from Swiggy's catalog. A malicious or compromised product listing could theoretically include adversarial text that the LLM interprets as instructions (indirect prompt injection via tool responses). Risk is **low** (not zero) because:
+- Product catalog data is managed by Swiggy, not arbitrary web content
+- The attack surface is limited to structured JSON fields, not free-form HTML
+- The skill's tool restriction (`mcp:swiggy-instamart` only) limits what the agent can do even if manipulated
 
 ### Risk: Unintended Cart Modifications
 
@@ -54,10 +57,12 @@ Swiggy MCP authentication uses OTP-based login. Session tokens are stored by Ope
 Layer 1: MCP-only (no browser)        → No page interaction, no accidental clicks
 Layer 2: Tool restriction              → Skill only has access to mcp:swiggy-instamart
 Layer 3: No checkout exposed           → Swiggy Instamart MCP doesn't support it
-Layer 4: Idempotency                   → Checks cart before adding
+Layer 4: Idempotency (best-effort)     → LLM instructed to check cart before adding*
 Layer 5: Isolated cron sessions        → No context leakage between runs
 Layer 6: Session expiry notification   → Alerts when re-auth is needed
 ```
+
+*Layer 4 is an LLM instruction, not a programmatic guarantee. The agent is told to check the cart before adding, but LLMs are non-deterministic — it may occasionally skip the check or misinterpret the cart contents. In practice this means a rare duplicate item, not a safety issue.
 
 ## Responsible Use
 

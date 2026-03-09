@@ -4,6 +4,7 @@ set -euo pipefail
 
 SKILL_DIR="$HOME/.openclaw/skills/sneak-treat"
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+OPENCLAW_CONFIG="$HOME/.openclaw/openclaw.json"
 
 echo "=== Sneak Treat Installer ==="
 echo ""
@@ -29,13 +30,13 @@ if [ "$NODE_VERSION" -lt 22 ]; then
 fi
 echo "  Node.js: $(node -v)"
 
-# 2. Check gateway
+# 2. Check gateway (use openclaw status instead of hardcoded port)
 echo ""
 echo "[2/6] Checking OpenClaw gateway..."
-if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:18789/ 2>/dev/null | grep -q "200"; then
+if openclaw gateway status 2>/dev/null | grep -q "Runtime: running"; then
   echo "  Gateway is running."
 else
-  echo "  WARNING: Gateway is not responding on port 18789."
+  echo "  WARNING: Gateway is not running."
   echo "  Start it with: openclaw gateway start"
   echo "  Or run: openclaw onboard --install-daemon"
   read -p "  Continue anyway? (y/N) " -n 1 -r
@@ -54,17 +55,28 @@ echo "  Skill files copied."
 # 4. MCP server config
 echo ""
 echo "[4/6] Swiggy MCP server configuration"
-echo ""
-echo "  Add this to your ~/.openclaw/openclaw.json (merge into existing config):"
-echo ""
-echo '  "mcpServers": {'
-echo '    "swiggy-instamart": {'
-echo '      "url": "https://mcp.swiggy.com/im",'
-echo '      "transport": "streamable-http"'
-echo '    }'
-echo '  }'
-echo ""
-read -p "  Press Enter when done (or Ctrl-C to abort)..."
+
+if grep -q "swiggy-instamart" "$OPENCLAW_CONFIG" 2>/dev/null; then
+  echo "  Swiggy Instamart MCP server already configured. Skipping."
+elif command -v jq &>/dev/null; then
+  echo "  Adding Swiggy MCP server to $OPENCLAW_CONFIG..."
+  TMPFILE=$(mktemp)
+  jq '.mcpServers["swiggy-instamart"] = {"url": "https://mcp.swiggy.com/im", "transport": "streamable-http"}' "$OPENCLAW_CONFIG" > "$TMPFILE" && mv "$TMPFILE" "$OPENCLAW_CONFIG"
+  echo "  Done."
+else
+  echo ""
+  echo "  jq is not installed — cannot auto-merge config."
+  echo "  Add this to your ~/.openclaw/openclaw.json (merge into existing config):"
+  echo ""
+  echo '  "mcpServers": {'
+  echo '    "swiggy-instamart": {'
+  echo '      "url": "https://mcp.swiggy.com/im",'
+  echo '      "transport": "streamable-http"'
+  echo '    }'
+  echo '  }'
+  echo ""
+  read -p "  Press Enter when done (or Ctrl-C to abort)..."
+fi
 
 # 5. Authenticate with Swiggy
 echo ""

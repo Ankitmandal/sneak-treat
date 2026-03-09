@@ -5,8 +5,8 @@ set -euo pipefail
 echo "=== Sneak Treat Test ==="
 echo ""
 
-# Check gateway
-if ! curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:18789/ 2>/dev/null | grep -q "200"; then
+# Check gateway (no hardcoded port — use openclaw's own status check)
+if ! openclaw gateway status 2>/dev/null | grep -q "Runtime: running"; then
   echo "FAIL: OpenClaw gateway is not running."
   echo "Start it: openclaw gateway start"
   exit 1

@@ -11,7 +11,7 @@ An [OpenClaw](https://github.com/openclaw/openclaw) skill uses Swiggy's official
 | | Browser Agent | MCP Agent (this project) |
 |-|--------------|--------------------------|
 | Can accidentally checkout | Yes | **No** (not exposed) |
-| Prompt injection risk | High (reads page HTML) | **None** (structured API) |
+| Prompt injection risk | High (reads page HTML) | **Low** (structured API, no HTML) |
 | Clicks wrong button | Possible | **N/A** (no buttons) |
 | Cost per run | $0.10–0.50 | **< $0.01** |
 | Breaks when UI changes | Yes | **No** (API is stable) |
@@ -127,15 +127,16 @@ Swiggy MCP sessions expire periodically. When this happens:
 2. The `session-notify.sh` script sends a macOS notification (if configured)
 3. Re-authenticate: `openclaw chat --prompt "Connect to the Swiggy Instamart MCP server and authenticate."`
 
-To set up notifications:
+To set up notifications (macOS and Linux):
 ```bash
 # Add to your crontab (crontab -e)
 5 3 * * * /path/to/sneak-treat/scripts/session-notify.sh
 ```
+Uses `osascript` on macOS, `notify-send` on Linux, or falls back to stderr.
 
 ## Security
 
-No secrets are stored in this repository. All API keys and tokens live in `~/.openclaw/.env` (chmod 600) and are referenced via `${VAR_NAME}` in config files.
+No secrets are stored in this repository. All API keys and tokens live in `~/.openclaw/.env` (chmod 600) and are referenced via `${VAR_NAME}` in config files. See [config/.env.example](config/.env.example) for the expected format.
 
 See [docs/SECURITY.md](docs/SECURITY.md) for the full security model, threat analysis, and defense layers.
 
