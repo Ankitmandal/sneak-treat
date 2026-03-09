@@ -26,7 +26,24 @@ echo "[OK] Skill is installed"
 echo ""
 echo "Running sneak-treat skill..."
 echo "---"
-openclaw chat --prompt "Run the sneak-treat skill. Report what happened."
+RESULT=$(openclaw chat --prompt "Run the sneak-treat skill. Report what happened." 2>&1)
+echo "$RESULT"
 echo "---"
-echo ""
-echo "Check your Swiggy Instamart cart to verify the item was added."
+
+# Basic outcome check
+if echo "$RESULT" | grep -qi "added\|already in cart\|skipping"; then
+  echo ""
+  echo "[OK] Skill completed successfully."
+elif echo "$RESULT" | grep -qi "session expired\|unauthorized"; then
+  echo ""
+  echo "[WARN] Swiggy session expired. Re-authenticate before using."
+  exit 1
+elif echo "$RESULT" | grep -qi "not found\|out of stock"; then
+  echo ""
+  echo "[WARN] Product issue — check if it's available on Swiggy Instamart."
+  exit 1
+else
+  echo ""
+  echo "[INFO] Skill ran but outcome is unclear. Check your Swiggy cart manually."
+  echo "       Review logs: ~/.openclaw/logs/"
+fi

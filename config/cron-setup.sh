@@ -16,7 +16,7 @@ fi
 openclaw cron create \
   --name "sneak-treat-run" \
   --schedule "0 3 * * *" \
-  --prompt "Run the sneak-treat skill. If authentication has expired or any error occurs, report the error. Do not attempt to fix it. Do not proceed to checkout." \
+  --prompt "Run the sneak-treat skill. Report what happened." \
   --isolated true
 
 echo "Done. Verify with: openclaw cron list"

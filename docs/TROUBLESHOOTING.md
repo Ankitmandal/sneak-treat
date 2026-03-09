@@ -80,9 +80,9 @@ If it is listed but not executing, check that the OpenClaw gateway is running at
 
 **Symptom**: Agent fails with model/API errors.
 
-**Check**: Verify your Groq API key is valid:
+**Check**: Verify your Groq API key is set (without printing the full key):
 ```bash
-echo $GROQ_API_KEY  # Should start with gsk_
+echo "${GROQ_API_KEY:0:8}..."  # Should start with gsk_
 ```
 
 Check Groq rate limits at [console.groq.com](https://console.groq.com).

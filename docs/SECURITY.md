@@ -66,4 +66,6 @@ Layer 6: Session expiry notification   → Alerts when re-auth is needed
 
 ## Responsible Use
 
-This project is designed for use on **your own Swiggy account**. Using it to modify someone else's cart without their knowledge may violate terms of service and could have legal implications depending on your jurisdiction.
+- **Terms of Service**: Automated interaction with Swiggy (even on your own account) may violate Swiggy's Terms of Service. Use at your own risk. This project is provided for educational purposes and as a reference for safe AI agent design.
+- **Your own account only**: Using this to modify someone else's cart without their knowledge could have legal implications depending on your jurisdiction.
+- **No warranty**: This project does not guarantee that Swiggy won't flag, rate-limit, or ban accounts that use automated tools.

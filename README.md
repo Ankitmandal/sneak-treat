@@ -146,6 +146,8 @@ See [docs/SECURITY.md](docs/SECURITY.md) for the full security model, threat ana
 - **MCP server stability** — Swiggy's MCP is relatively new and may have occasional issues
 - **Product availability** — If the item is out of stock, the agent can't add it
 - **Machine must be awake** — The cron job runs via OpenClaw's gateway, which requires the machine to be on
+- **Limited observability** — The session-notify script only detects auth failures. Other failure modes (MCP down, product not found, Groq rate limit) are logged by OpenClaw but don't trigger notifications. Check `~/.openclaw/logs/` periodically.
+- **Swiggy ToS** — Automated interaction with Swiggy may violate their Terms of Service. Use at your own risk.
 
 ## Docs
 

@@ -61,7 +61,9 @@ if grep -q "swiggy-instamart" "$OPENCLAW_CONFIG" 2>/dev/null; then
 elif command -v jq &>/dev/null; then
   echo "  Adding Swiggy MCP server to $OPENCLAW_CONFIG..."
   TMPFILE=$(mktemp)
+  ORIGINAL_PERMS=$(stat -f "%OLp" "$OPENCLAW_CONFIG" 2>/dev/null || stat -c "%a" "$OPENCLAW_CONFIG" 2>/dev/null || echo "600")
   jq '.mcpServers["swiggy-instamart"] = {"url": "https://mcp.swiggy.com/im", "transport": "streamable-http"}' "$OPENCLAW_CONFIG" > "$TMPFILE" && mv "$TMPFILE" "$OPENCLAW_CONFIG"
+  chmod "$ORIGINAL_PERMS" "$OPENCLAW_CONFIG"
   echo "  Done."
 else
   echo ""

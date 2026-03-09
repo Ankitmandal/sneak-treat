@@ -30,7 +30,7 @@ Use Swiggy's official Model Context Protocol server.
 **Why this wins:**
 - **No browser at all** — structured API calls, not page interactions
 - **Checkout not exposed** — Instamart MCP doesn't support placing orders
-- **Structured data** — no HTML parsing, no prompt injection surface
+- **Structured data** — no HTML parsing, minimal prompt injection surface (see [SECURITY.md](SECURITY.md) for nuance)
 - **Official API** — maintained by Swiggy, follows MCP standard
 - **Semantic resilience** — API tools don't break when UI changes
 
@@ -49,11 +49,11 @@ The agent calls these tools with typed parameters and gets structured JSON respo
 
 ### Tool Scoping
 
-The skill config (`config.json`) sets `"tools": ["mcp:swiggy-instamart"]`. This means the OpenClaw agent running this skill can ONLY access Swiggy Instamart MCP tools. No browser, no filesystem, no shell execution.
+The skill config (`config.json`) sets `"tools": ["mcp:swiggy-instamart"]`. This *should* mean the OpenClaw agent running this skill can only access Swiggy Instamart MCP tools — no browser, no filesystem, no shell execution. After installation, verify this by running the skill and checking the audit log (`~/.openclaw/logs/audit.jsonl`) to confirm only `mcp:swiggy-instamart` tool calls appear.
 
-### Idempotency
+### Idempotency (Best-Effort)
 
-The skill checks the cart before adding. If the item is already present, it skips. This prevents accumulating duplicate items across daily cron runs.
+The skill instructs the LLM to check the cart before adding. If the item is already present, it should skip. This is an LLM instruction, not a programmatic guarantee — the agent may occasionally miss the check. In practice, a rare duplicate item is the worst case, not a safety issue.
 
 ### Error Handling
 
