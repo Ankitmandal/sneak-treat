@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.openclaw.ai/config-schema.json",
+  "mcpServers": {
+    "swiggy-instamart": {
+      "url": "https://mcp.swiggy.com/im",
+      "transport": "streamable-http"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "groq/openai/gpt-oss-120b"
+      }
+    }
+  }
+}

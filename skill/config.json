@@ -1,0 +1,6 @@
+{
+  "name": "sneak-treat",
+  "description": "Add a dog treat to the Swiggy Instamart cart via MCP",
+  "tools": ["mcp:swiggy-instamart"],
+  "version": "1.0.0"
+}
